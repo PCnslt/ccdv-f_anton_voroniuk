@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopAssist</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 550px;
+      margin: 40px auto;
+      padding: 0 16px;
+      background: #f5f5f5;
+    }
+    #chat {
+      background: #ffffff;
+      border: 1px solid #dddddd;
+      border-radius: 8px;
+      padding: 16px;
+      height: 360px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 80%;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #0066cc;
+      color: #ffffff;
+      align-self: flex-end;
+    }
+    .bot {
+      background: #eeeeee;
+      color: #111111;
+      align-self: flex-start;
+    }
+    .tokens {
+      font-size: 11px;
+      color: #666666;
+      margin-top: 6px;
+    }
+    form {
+      display: flex;
+      gap: 8px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #cccccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 18px;
+      background: #0066cc;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #999999;
+    }
+  </style>
+</head>
+<body>
+  <h2>ShopAssist</h2>
+  <div id="chat"></div>
+  <form id="form">
+    <input id="input" type="text" placeholder="Type a message..." required />
+    <button id="btn" type="submit">Send</button>
+  </form>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const btn = document.getElementById("btn");
+
+    function appendMessage(text, sender, inputTokens = null) {
+      const div = document.createElement("div");
+      div.className = `msg ${sender}`;
+      div.textContent = text;
+
+      if (inputTokens !== null) {
+        const meta = document.createElement("div");
+        meta.className = "tokens";
+        meta.textContent = `Input tokens: ${inputTokens}`;
+        div.appendChild(meta);
+      }
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage(text, "user");
+      input.value = "";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        const data = await response.json();
+        appendMessage(data.reply, "bot", data.input_tokens);
+      } catch (err) {
+        appendMessage("Error: Could not reach the server.", "bot");
+      } finally {
+        btn.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -33,7 +33,7 @@ def chat(body: ChatIn):
     for block in response.content:
         if block.type == "text":
             reply = block.text
-        history.append({"role":"assistant","content":reply})
+            history.append({"role":"assistant","content":reply})
     return {"reply":reply,"input_tokens":str(response.usage.input_tokens)}
 
 
